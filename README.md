@@ -1,7 +1,12 @@
 # PHP_Laravel12_Cloner
 
-![Laravel](https://img.shields.io/badge/Laravel-12-red)
-![PHP](https://img.shields.io/badge/PHP-8.x-blue)
+<p align="center">
+<a href="#"><img src="https://img.shields.io/badge/Laravel-12-red" alt="Laravel Version"></a>
+<a href="#"><img src="https://img.shields.io/badge/PHP-8.x-blue" alt="PHP Version"></a>
+<a href="#"><img src="https://img.shields.io/badge/Feature-CRUD-green" alt="CRUD"></a>
+<a href="#"><img src="https://img.shields.io/badge/Feature-Product%20Cloner-orange" alt="Cloner"></a>
+<a href="#"><img src="https://img.shields.io/badge/Database-MySQL-lightgrey" alt="Database"></a>
+</p>
 
 ---
 
