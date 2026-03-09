@@ -68,36 +68,44 @@ laravel-cloner-demo
 
 Install Laravel using Composer.
 
+```
 composer create-project laravel/laravel laravel-cloner-demo
+```
 
 Run the Laravel development server.
 
+```
 php artisan serve
+```
 
 Open browser:
 
+```
 http://127.0.0.1:8000
-
+```
 ---
 
 ## Step 2 — Configure Database
 
 Open .env file.
 
+```
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=laravel
 DB_USERNAME=root
 DB_PASSWORD=
-
+```
 ---
 
 ## Step 3 — Install Cloner Package
 
 Install the Laravel model cloning package.
 
+```
 composer require bkwld/cloner
+```
 
 Laravel automatically registers the package.
 
@@ -107,8 +115,9 @@ Laravel automatically registers the package.
 
 Run the command:
 
+```
 php artisan make:model Product -m
-
+```
 ---
 
 ## Step 5 — Edit Migration
@@ -146,8 +155,9 @@ return new class extends Migration
 
 Run migration:
 
+```
 php artisan migrate
-
+```
 ---
 
 ## Step 6 — Product Model
@@ -182,8 +192,9 @@ class Product extends Model
 
 Run:
 
+```
 php artisan make:controller ProductController
-
+```
 File:
 
 app/Http/Controllers/ProductController.php
@@ -320,8 +331,9 @@ Route::get('/products/clone/{id}',[ProductController::class,'clone']);
 
 Create directory:
 
+```
 resources/views/products
-
+```
 ---
 
 ## Step 10 — Product List Page
