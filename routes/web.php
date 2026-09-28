@@ -3,23 +3,44 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 
-// Display product list
-Route::get('/products',[ProductController::class,'index']);
+/*
+|--------------------------------------------------------------------------
+| Product Routes
+|--------------------------------------------------------------------------
+*/
 
-// Show form to create a new product
-Route::get('/products/create',[ProductController::class,'create']);
+// Product dashboard
+Route::get('/products/dashboard', [ProductController::class, 'dashboard'])
+    ->name('products.dashboard');
 
-// Store new product in database
-Route::post('/products/store',[ProductController::class,'store']);
+// Product clone history
+Route::get('/products/clone-history', [ProductController::class, 'cloneHistory'])
+    ->name('products.clone-history');
 
-// Show edit form for selected product
-Route::get('/products/edit/{id}',[ProductController::class,'edit']);
+// Display products
+Route::get('/products', [ProductController::class, 'index'])
+    ->name('products.index');
 
-// Update product details in database
-Route::post('/products/update/{id}',[ProductController::class,'update']);
+// Show create form
+Route::get('/products/create', [ProductController::class, 'create'])
+    ->name('products.create');
 
-// Delete selected product
-Route::get('/products/delete/{id}',[ProductController::class,'delete']);
+// Store product
+Route::post('/products/store', [ProductController::class, 'store'])
+    ->name('products.store');
 
-// Clone (duplicate) selected product
-Route::get('/products/clone/{id}',[ProductController::class,'clone']);
+// Show edit form
+Route::get('/products/edit/{id}', [ProductController::class, 'edit'])
+    ->name('products.edit');
+
+// Update product
+Route::post('/products/update/{id}', [ProductController::class, 'update'])
+    ->name('products.update');
+
+// Delete product
+Route::get('/products/delete/{id}', [ProductController::class, 'delete'])
+    ->name('products.delete');
+
+// Clone product
+Route::get('/products/clone/{id}', [ProductController::class, 'clone'])
+    ->name('products.clone');
