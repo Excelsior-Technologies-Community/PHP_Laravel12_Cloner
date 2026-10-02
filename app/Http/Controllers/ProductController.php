@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\ProductAttribute;
+use App\Models\CloneBlueprint;
+use App\Models\CloneAuditLog;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
 
 class ProductController extends Controller
@@ -620,5 +625,149 @@ class ProductController extends Controller
                 'toDate'
             )
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deep Multi-Level Relational Clone Studio & Smart Field Replacer View
+    |--------------------------------------------------------------------------
+    */
+    public function deepCloneStudio(Request $request)
+    {
+        $products = Product::with(['variants.attributes', 'clones'])
+            ->latest()
+            ->paginate(10);
+
+        $blueprints = CloneBlueprint::latest()->get();
+
+        return view('products.deep_clone_studio', compact('products', 'blueprints'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Execute Deep Multi-Level Relational Clone
+    |--------------------------------------------------------------------------
+    */
+    public function deepClone(Request $request, $id)
+    {
+        $product = Product::with('variants.attributes')->findOrFail($id);
+
+        $prefix = $request->input('prefix', 'Copy of ');
+        $suffix = $request->input('suffix', '');
+        $skuPrefix = $request->input('sku_prefix', 'CLONE-');
+        $priceMultiplier = (float) $request->input('price_multiplier', 1.0);
+        $resetStock = $request->boolean('reset_stock');
+        $blueprintId = $request->input('blueprint_id');
+
+        $batchId = 'BATCH-' . date('YmdHis') . '-' . rand(100, 999);
+
+        // 1. Deep Duplicate Main Product
+        $clonedProduct = $product->replicate();
+        $clonedProduct->name = trim($prefix . $product->name . ' ' . $suffix);
+        $clonedProduct->sku = $skuPrefix . ($product->sku ?: rand(1000, 9999));
+        $clonedProduct->price = round((float)$product->price * $priceMultiplier, 2);
+        $clonedProduct->stock = $resetStock ? 0 : $product->stock;
+        $clonedProduct->cloned_from_id = $product->id;
+        $clonedProduct->save();
+
+        $relationsCount = 0;
+
+        // 2. Deep Duplicate Child Variants & Nested Grandchild Attributes
+        foreach ($product->variants as $variant) {
+            $clonedVariant = $variant->replicate();
+            $clonedVariant->product_id = $clonedProduct->id;
+            $clonedVariant->sku = 'VAR-' . rand(10000, 99999);
+            $clonedVariant->save();
+            $relationsCount++;
+
+            foreach ($variant->attributes as $attr) {
+                $clonedAttr = $attr->replicate();
+                $clonedAttr->product_variant_id = $clonedVariant->id;
+                $clonedAttr->save();
+                $relationsCount++;
+            }
+        }
+
+        // 3. Record Clone Audit Log
+        CloneAuditLog::create([
+            'batch_id' => $batchId,
+            'original_product_id' => $product->id,
+            'cloned_product_id' => $clonedProduct->id,
+            'blueprint_name' => $blueprintId ? (CloneBlueprint::find($blueprintId)->name ?? 'Custom Deep Clone') : 'Custom Deep Clone',
+            'relations_cloned_count' => $relationsCount,
+        ]);
+
+        return redirect()->route('products.deep-clone-studio')->with('success', "⚡ Deep Cloned '{$product->name}' with {$relationsCount} nested relations! Batch ID: {$batchId}");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Clone Blueprint Presets & Rollback Inspector View
+    |--------------------------------------------------------------------------
+    */
+    public function blueprints(Request $request)
+    {
+        $blueprints = CloneBlueprint::latest()->get();
+
+        $auditLogs = CloneAuditLog::with(['originalProduct', 'clonedProduct'])
+            ->latest()
+            ->paginate(10);
+
+        return view('products.blueprints', compact('blueprints', 'auditLogs'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Save Custom Clone Blueprint Preset
+    |--------------------------------------------------------------------------
+    */
+    public function saveBlueprint(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|min:2',
+            'prefix_rule' => 'nullable|string',
+            'status_override' => 'required|string',
+        ]);
+
+        $key = 'preset_' . Str::slug($request->name);
+
+        CloneBlueprint::create([
+            'name' => $request->name,
+            'preset_key' => $key,
+            'clone_relations' => $request->input('clone_relations', ['variants', 'attributes']),
+            'prefix_rule' => $request->input('prefix_rule', 'Copy of '),
+            'suffix_rule' => $request->input('suffix_rule', ''),
+            'price_modifier_percentage' => (float) $request->input('price_modifier_percentage', 0.0),
+            'reset_stock_to_zero' => $request->boolean('reset_stock_to_zero'),
+            'status_override' => $request->input('status_override', 'draft'),
+            'is_default' => $request->boolean('is_default'),
+        ]);
+
+        return redirect()->route('products.blueprints')->with('success', "🧬 Saved Clone Blueprint Preset '{$request->name}' successfully!");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Revert / Rollback Cloned Batch
+    |--------------------------------------------------------------------------
+    */
+    public function rollbackBatch(Request $request, $batch_id)
+    {
+        $logs = CloneAuditLog::where('batch_id', $batch_id)->get();
+
+        if ($logs->isEmpty()) {
+            return redirect()->route('products.blueprints')->with('error', "No audit records found for Batch ID: {$batch_id}");
+        }
+
+        $revertedCount = 0;
+        foreach ($logs as $log) {
+            if ($log->clonedProduct) {
+                $log->clonedProduct->delete();
+                $revertedCount++;
+            }
+            $log->delete();
+        }
+
+        return redirect()->route('products.blueprints')->with('success', "🔄 Successfully rolled back and deleted {$revertedCount} cloned record(s) from Batch '{$batch_id}'!");
     }
 }
