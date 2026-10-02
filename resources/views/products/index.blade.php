@@ -97,6 +97,20 @@
                 📊 Dashboard
             </a>
 
+            <a
+                href="{{ route('products.deep-clone-studio') }}"
+                class="btn btn-success"
+            >
+                🌿 Deep Clone Studio
+            </a>
+
+            <a
+                href="{{ route('products.blueprints') }}"
+                class="btn btn-purple text-white"
+                style="background-color: #6b21a8;"
+            >
+                🧬 Blueprints & Rollback
+            </a>
 
             <a
                 href="{{ route('products.clone-history') }}"
@@ -105,10 +119,9 @@
                 🕒 Clone History
             </a>
 
-
             <a
                 href="{{ route('products.create') }}"
-                class="btn btn-success"
+                class="btn btn-primary"
             >
                 + Add Product
             </a>

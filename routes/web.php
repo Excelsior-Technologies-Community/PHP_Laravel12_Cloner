@@ -42,6 +42,46 @@ Route::get(
 
 /*
 |--------------------------------------------------------------------------
+| Deep Multi-Level Relational Clone Studio & Smart Field Replacer
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/products/deep-clone-studio',
+    [ProductController::class, 'deepCloneStudio']
+)->name('products.deep-clone-studio');
+
+Route::post(
+    '/products/deep-clone/{id}',
+    [ProductController::class, 'deepClone']
+)->name('products.deep-clone');
+
+
+/*
+|--------------------------------------------------------------------------
+| Clone Blueprint Presets & Rollback Inspector
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/products/blueprints',
+    [ProductController::class, 'blueprints']
+)->name('products.blueprints');
+
+Route::post(
+    '/products/blueprints/save',
+    [ProductController::class, 'saveBlueprint']
+)->name('products.blueprints.save');
+
+Route::post(
+    '/products/rollback-batch/{batch_id}',
+    [ProductController::class, 'rollbackBatch']
+)->name('products.rollback-batch');
+
+
+
+/*
+|--------------------------------------------------------------------------
 | Bulk Product Operations
 |--------------------------------------------------------------------------
 */
